@@ -1,41 +1,45 @@
 # %% Import libraries
-from __future__ import (absolute_import, division, print_function,
-                        unicode_literals)
+# from __future__ import (absolute_import, division, print_function, unicode_literals)
 import datetime
-import backtrader as bt
-from TestStrategy import TestStrategy
 import pandas as pd
+import backtrader as bt
+# from btplotting.analyzers import RecorderAnalyzer
+from btplotting import BacktraderPlottingLive
+# from btplotting.schemes import Blackly
+# from btplotting.analyzers import RecorderAnalyzer
+# from btplotting.feeds import FakeFeed
+
+from btplotting import BacktraderPlotting
+from btplotting.schemes import Tradimo
+
+from MovingAverageCrossStrategy import MovingAverageCrossStrategy
+
 
 # %matplotlib inline
-
-class CustomCSVData(bt.feeds.GenericCSVData):
-    params2 = (
-        ('dtformat', '%Y-%m-%d %H:%M:%S'),
-        ('datetime', 0),
-        ('open', 1),
-        ('high', 2),
-        ('low', 3),
-        ('close', 4),
-        ('volume', 5),
-        ('openinterest', 6),
-    )
 
 if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
-    cerebro.addstrategy(TestStrategy)
+    cerebro.addstrategy(MovingAverageCrossStrategy)
+    cerebro.addanalyzer(BacktraderPlottingLive, address="*", port=8889)
 
     datapath = './datas/spx_2018_07.csv'
     df = pd.read_csv(datapath, index_col=0, parse_dates=True)
 
     data = bt.feeds.PandasData(dataname=df,
                         fromdate=datetime.datetime(2018, 7, 1),
-                        todate=datetime.datetime(2018, 7, 5))
+                        todate=datetime.datetime(2018, 7, 2))
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
+    cerebro.addanalyzer(bt.analyzers.SharpeRatio)
+    cerebro.addanalyzer(bt.analyzers.Returns)
+    cerebro.addanalyzer(bt.analyzers.AnnualReturn)
+    cerebro.addanalyzer(bt.analyzers.DrawDown)
+    cerebro.addanalyzer(bt.analyzers.Transactions)
+    cerebro.addanalyzer(bt.analyzers.tradeanalyzer.TradeAnalyzer)
 
-    cerebro.broker.setcash(100000.0)
+    cerebro.broker.setcash(100_000.0)
 
     # Add a FixedSize sizer according to the stake
     cerebro.addsizer(bt.sizers.FixedSize, stake=10)
@@ -52,4 +56,6 @@ if __name__ == '__main__':
     print('Final Portfolio Value: %.2f' % cerebro.broker.getvalue())
 
     # Plot the result
-    cerebro.plot()
+    plotter = BacktraderPlotting(style='bar', plot_mode='single', scheme=Tradimo())
+    cerebro.plot(plotter, iplot=False)
+

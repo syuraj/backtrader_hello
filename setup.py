@@ -11,11 +11,10 @@ setup(
             'datas/*/*/*csv'
         ],
     },
-    packages = [
-        'backtrader',
-    ],
+    packages = find_packages(),
     install_requires = [
-        'pandas'
+        'pandas',
+        'git+https://github.com/happydasch/btplotting'
     ],
     classifiers = [
         'Environment :: Console',
