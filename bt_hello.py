@@ -14,6 +14,7 @@ from btplotting.schemes import Tradimo
 import os
 # from MovingAverageCrossStrategy import MovingAverageCrossStrategy
 from BreadBankStrategy2 import BreadBankStrategy2
+# from TrailingStop import TrailingStop
 # import pytz
 # from RandomStrat import RandomStrat
 # %matplotlib inline
@@ -22,7 +23,7 @@ if __name__ == '__main__':
     cerebro = bt.Cerebro()
 
     cerebro.addstrategy(BreadBankStrategy2)
-    cerebro.addanalyzer(BacktraderPlottingLive, address="*", port=8889)
+    # cerebro.addanalyzer(BacktraderPlottingLive, address="*", port=8889)
 
     # datapath = './datas/spx_2018_07.csv'
     # df = pd.read_csv(datapath, index_col=0, parse_dates=True)
@@ -37,13 +38,12 @@ if __name__ == '__main__':
     if os.path.exists(datapath):
         data = pd.read_csv(datapath, parse_dates=["Datetime"], index_col="Datetime")
     else:
-        data = yf.download('NQ=F', interval='1m', auto_adjust=True)
+        data = yf.download('NQ=F', start='2023-09-01', end='2023-09-07', interval='1m', auto_adjust=True)
         # desired_timezone = pytz.timezone('America/New_York')
         # data.index = data.index.tz_convert(desired_timezone)
         data.to_csv(datapath)
 
     data = bt.feeds.PandasData(dataname=data)
-
 
     # Add the Data Feed to Cerebro
     cerebro.adddata(data)
@@ -57,7 +57,7 @@ if __name__ == '__main__':
     cerebro.broker.setcash(50_000.0)
 
     # Add a FixedSize sizer according to the stake
-    cerebro.addsizer(bt.sizers.FixedSize, stake=10)
+    cerebro.addsizer(bt.sizers.FixedSize, stake=1)
 
     cerebro.broker.setcommission(commission=0.0)
     print('Starting Portfolio Value: %.2f' % cerebro.broker.getvalue())
@@ -72,5 +72,8 @@ if __name__ == '__main__':
 
     # Plot the result
     plotter = BacktraderPlotting(style='bar', plot_mode='single', scheme=Tradimo())
+
+    # cerebro.plot()
+    # cerebro.plot(plotter)
     cerebro.plot(plotter, iplot=False)
 
